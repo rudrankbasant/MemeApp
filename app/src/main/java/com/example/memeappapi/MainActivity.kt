@@ -1,5 +1,6 @@
 package com.example.memeappapi
 
+import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
@@ -18,6 +19,9 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 
 class MainActivity : AppCompatActivity() {
+
+    var currentImageUrl: String ?=null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -32,6 +36,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         shareButton.setOnClickListener{
+            val intent = Intent(Intent.ACTION_SEND)
+            intent.type = "text/plain"
+            intent.putExtra(Intent.EXTRA_TEXT, "Check out this meme $currentImageUrl")
+            val chooser = Intent.createChooser(intent, "Share this meme using...")
+            startActivity(chooser)
 
         }
     }
@@ -41,16 +50,16 @@ class MainActivity : AppCompatActivity() {
         val progressBar: ProgressBar=findViewById(R.id.progressBar)
         progressBar.visibility= View.VISIBLE
         // Instantiate the RequestQueue.
-        val queue = Volley.newRequestQueue(this)
+
         val url = "https://meme-api.herokuapp.com/gimme"
 
         // Request a string response from the provided URL.
         val jsonObjectRequest = JsonObjectRequest(
             Request.Method.GET, url, null,
             { response ->
-                val url = response.getString("url")
+                currentImageUrl = response.getString("url")
                 val imageViewMeme=findViewById<ImageView>(R.id.imageViewMeme)
-                Glide.with(this).load(url).listener(object: RequestListener<Drawable>{
+                Glide.with(this).load(currentImageUrl).listener(object: RequestListener<Drawable>{
                     override fun onLoadFailed(
                         e: GlideException?,
                         model: Any?,
@@ -76,6 +85,6 @@ class MainActivity : AppCompatActivity() {
             { })
 
         // Add the request to the RequestQueue.
-        queue.add(jsonObjectRequest)
+        MySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest)
     }
 }
